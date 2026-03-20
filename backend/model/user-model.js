@@ -33,9 +33,7 @@ const user = new Schema ({
         lowercase:true,
         default:"user"
     },
-    profileImage:{
-        type:String,
-    }
+   
 },{
     timestamps:true
 })

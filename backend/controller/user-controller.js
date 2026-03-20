@@ -1,34 +1,21 @@
 import { UserSchema } from "../model/user-model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { deleteUploadedFile } from "../helper/deleteUploadFile.js";
 
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone, user_name, lastName } = req.body;
 
-    const image = req.file;
-
-    if (!image) {
-      return res.status(400).json({
-        status: false,
-        message: "Profile Image required !!",
-      });
-    }
     if (!name || !email || !password) {
-      await deleteUploadedFile(image);
       return res.status(400).json({
         status: false,
         message: "Name, email and password required",
       });
     }
 
-    const imagePath = `${process.env.BASE_URL}/uploads/${image.filename}`;
-
     const emailExist = await UserSchema.findOne({ email });
 
     if (emailExist) {
-      await deleteUploadedFile(image);
       return res.status(400).json({
         status: false,
         message: "Email already registered",
@@ -42,7 +29,6 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       role: "user",
-      profileImage: imagePath,
       phone,
       user_name,
       lastName,
@@ -54,7 +40,6 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    await deleteUploadedFile(req.file);
 
     return res.status(500).json({
       status: false,
@@ -176,18 +161,15 @@ export const getAllUsers = async (req, res) => {
   }
 };
 export const updateUser = async (req, res) => {
-  let newImage = req.file;
-  console.log(newImage);
   
+console.log(req.body);
 
   try {
-    const { name, email, isActive, lastName, user_name } = req.body;
+    const { name, email, isActive , phone} = req.body;
 
     const existingUser = await UserSchema.findById(req.params.id);
 
     if (!existingUser) {
-      // delete uploaded file if user not found
-      if (newImage) await deleteUploadedFile(newImage);
 
       return res.status(404).json({
         status: false,
@@ -199,17 +181,8 @@ export const updateUser = async (req, res) => {
 
     if (name) updateData.name = name;
     if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (lastName) updateData.lastName = lastName;
-    if (user_name) updateData.user_name = user_name;
-
-    if (newImage) {
-      if (existingUser.profileImage) {
-        await deleteUploadedFile(existingUser.profileImage);
-      }
-
-      updateData.profileImage = `${process.env.BASE_URL}/uploads/${newImage.filename}`;
-    }
 
     const updatedUser = await UserSchema.findByIdAndUpdate(
       req.params.id,
@@ -217,7 +190,7 @@ export const updateUser = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     ).select("-password");
 
     return res.json({
@@ -225,13 +198,8 @@ export const updateUser = async (req, res) => {
       message: "User updated successfully",
       data: updatedUser,
     });
-
   } catch (error) {
     console.error("Update Error:", error);
-
-    if (newImage) {
-      await deleteUploadedFile(newImage);
-    }
 
     return res.status(500).json({
       status: false,
