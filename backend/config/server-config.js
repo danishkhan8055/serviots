@@ -36,7 +36,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 connectDB();
 await createDefaultAdmin();
 
-app.use("/auth", userRouter);
-app.use("/tasks", taskRouter);
+app.use("/api/auth", userRouter);
+app.use("/api/tasks", taskRouter);
 
 export default app;
