@@ -18,7 +18,6 @@ const Register = () => {
   const onSubmit = useCallback(
     async (data) => {
       try {
-        // Simple JSON instead of FormData
         await registerUser(data).unwrap();
 
         toast.success("User Registered Successfully");
